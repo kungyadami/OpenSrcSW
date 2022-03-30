@@ -90,38 +90,33 @@ public class indexer {
          str = eElement.getElementsByTagName("body").item(0).getTextContent();
          stringArr = str.split("#");
 
-         for (int j = 0; j < stringArr.length-1; j++) {
+         for (int j = 0; j < stringArr.length; j++) {
             s = null;
             s = stringArr[j].split(":");
-//            for (int k = 0; k < s.length; k++) {
-//               if (s.length == 2) {
-//                  if (tfx.get(s[0]) == null) {
-//                     tfx.put(s[0], Double.parseDouble(s[1])); // s[1] 뿉
-//                  } else {
-//                     tfx.put(s[0], tfx.get(s[0]) + Double.parseDouble(s[1]));
-//                  }
-//               }
-//            }
-            
-            int rep = Integer.parseInt(s[1]);
-            double weight = 0.0;
-            if (tfx.get(s[0]) != null) {
+
+            if (s.length == 2) {
+               int rep = Integer.parseInt(s[1]);
+               double weight = 0.0;
                
+               if (tfx.get(s[0]) == null) {
 //               weight = Double.parseDouble(s[1])* Math.log(nodeList.getLength() / (double) (hashmap.get(s[0])))));
 //               weight = Math.round(weight * 100) / 100.0;
-               weight = (double) ((rep) * Math.log(nodeList.getLength() / hashmap.get(s[0])));
-               weight = Math.round(weight * 100) / 100.0;
-               tfx.put(s[0], weight);
+                  weight = (double) ((rep) * Math.log(nodeList.getLength() / hashmap.get(s[0])));
+                  weight = Math.round(weight * 100) / 100.0;
+                  
+                  tfx.put(s[0], weight);   
+                  
+                  String mapStr = wfx.get(s[0]) + " " + Integer.toString(i) + " " + Double.toString(weight);
+                  wfx.put(s[0], mapStr);
+                  
+               }
+               
+               if (wfx.get(s[0]) != null) {
+                  String Total = "";
+                  Total += Integer.toString(i) + " " + Double.toString(weight);
+                  wfx.put(s[0], Total);
+               }
             }
-            if (wfx.get(s[0]) == null) {
-               String Total = "";
-               Total += Integer.toString(i) + " " + Double.toString(weight);
-               wfx.put(s[0], Total);
-            } else {
-               String mapStr = wfx.get(s[0]) + " " + Integer.toString(i) + " " + Double.toString(weight);
-               wfx.put(s[0], mapStr);
-            }
-
          }
          Iterator<String> itstr = hashmap.keySet().iterator();
          while (itstr.hasNext()) {
