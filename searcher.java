@@ -39,7 +39,7 @@ public class searcher {
       KeywordExtractor ke = new KeywordExtractor();
       KeywordList kl = ke.extractKeyword(inputQuery, true);
       for(int i=0;i<kl.size();i++) {
-    	//꼬꼬마 분석기로 형태소 나누기
+       //꼬꼬마 분석기로 형태소 나누기
          Keyword kwrd = kl.get(i); 
          //queryMap 이라는 hashmap으로 kwrd 단어는 key, kwrd의 weight값은 value에 put
          queryMap.put(kwrd.getString(), Integer.toString(kwrd.getCnt())); 
@@ -53,13 +53,13 @@ public class searcher {
       
       //2차원 배열 생성하고, queryMap만큼의 크기만큼 만들기. 1번째 열에는 단어를, 두번째 열에는 weight를
       String[][] queryArray = new String[queryMap.size()][2];
-      /*	[0]	[1]	
-       *	라면	1
-       * 	면	1
-       *	분말	1 
-       *	스프	1 
+      /*   [0]   [1]   
+       *   라면   1
+       *    면   1
+       *   분말   1 
+       *   스프   1 
        *
-       *	이렇게 만들어지는 배열이다.
+       *   이렇게 만들어지는 배열이다.
        */
 
        //.post파일을 object로 변환해서 postMap에 넣기
@@ -68,7 +68,7 @@ public class searcher {
    
        int cnt=0;
        while (it.hasNext()) {     
-    	   	//postmap key
+             //postmap key
             String key = it.next();
             //postmap value
             String value = postMap.get(key);
@@ -76,8 +76,8 @@ public class searcher {
             //for each문을 이용해 queryArray 배열에 key값과 value값 넣기
             for (String s : queryMap.keySet()) {
                if (s.equals(key)) {
-            	   queryArray[cnt][0]=key;
-            	   queryArray[cnt++][1]=value;
+                  queryArray[cnt][0]=key;
+                  queryArray[cnt++][1]=value;
                }
             }
        }
@@ -95,35 +95,36 @@ public class searcher {
 
    private void CalcSim(HashMap<String, String> queryMap, String[][] queryArray) throws SAXException, IOException, ParserConfigurationException {
          
-	   	 //splitBySpace 배열은 queryArray에 있는 값들을 split으로 나누어 저장해주는 이차원배열
+          //splitBySpace 배열은 queryArray에 있는 값들을 split으로 나누어 저장해주는 이차원배열
          String[][] splitBySpace = new String[queryArray.length][];
          
          //splitBySpace에 split한 값들 넣어주기
          for(int i=0;i<splitBySpace.length;i++) {
-        	 splitBySpace[i]=queryArray[i][1].split(" ");
+            splitBySpace[i]=queryArray[i][1].split(" ");
          }
          //문서별 유사도를 저장할 배열
           double[][] similarity = new double[splitBySpace[0].length/2][2];
           double sum;
           
           
-  		Iterator it = queryMap.entrySet().iterator();
-	    while (it.hasNext()) {
-	    	//Map.entry를 이용해 value값과 key값을 가져온다.
-	        Map.Entry<String, String> entry = (Map.Entry)it.next();
-	        //sum배열에 query의 weight값과 가중치값을 곱하고, 그 값들을 모두 더한다.(내적)
-	        
-	      
-	        for(int i = 0; i < similarity.length;i++) {
-	        	similarity[i][0] = i;
-	        	 sum = 0.0;
-	            for(int j = 0; j < splitBySpace.length; j++) {
-	               sum += Double.parseDouble(entry.getValue()) * Double.parseDouble(splitBySpace[j][(i*2) + 1]);
-	            }
-	            similarity[i][1] = sum;
-	         }
-	    }
-      		
+        Iterator it = queryMap.entrySet().iterator();
+       while (it.hasNext()) {
+          //Map.entry를 이용해 value값과 key값을 가져온다.
+           Map.Entry<String, String> entry = (Map.Entry)it.next();
+           //sum배열에 query의 weight값과 가중치값을 곱하고, 그 값들을 모두 더한다.(내적)
+           
+         
+           for(int i = 0; i < similarity.length;i++) {
+              similarity[i][0] = i;
+               sum = 0.0;
+               for(int j = 0; j < splitBySpace.length; j++) {
+                  sum += Double.parseDouble(entry.getValue()) * Double.parseDouble(splitBySpace[j][(i*2) + 1]);
+               }
+               similarity[i][1] = sum;
+            }
+       }
+       
+            
       System.out.println("sim : ");
       for(int i = 0; i < similarity.length; i++) {
          for(int j = 0; j < similarity[i].length; j++) {
@@ -131,8 +132,60 @@ public class searcher {
          }
          System.out.println();
       }
-	    
-      //내림차순 정렬을 진행한다.
+      
+      // 분모에 들어갈 ||A|| 계산
+      double CosA = 0;
+      while (it.hasNext()) {
+       //Map.entry를 이용해 value값과 key값을 가져온다.
+       Map.Entry<String, String> entry = (Map.Entry)it.next();
+              for(int i = 0; i < splitBySpace.length;  i++) { //여기 기존 코드와 좀 다르다
+                 CosA += Double.parseDouble(entry.getValue())*Double.parseDouble(entry.getValue());
+      }
+     CosA = Math.sqrt(CosA);
+      System.out.println("CosA : " + CosA);
+      
+      // 분모에 들어갈 ||B|| 계산
+      double CosB[] = new double[similarity.length];
+      
+      for(int i = 0; i < CosB.length; i++) {
+         for(int j = 0; j < splitBySpace.length; j++) {
+            CosB[i] += Double.parseDouble(splitBySpace[j][i*2 + 1])*Double.parseDouble(splitBySpace[j][i*2 + 1]);
+         }
+         CosB[i] = Math.sqrt(CosB[i]);
+      }
+      
+      System.out.println("CosB : ");
+      for(int i = 0; i < CosB.length; i++) {
+         System.out.println(CosB[i]);
+      }
+      
+      //Cosine similarity 를 저장할 저장공간
+      double[][] CosineSimilarity = new double[splitBySpace[0].length/2][2];
+      
+      for(int i = 0; i < CosineSimilarity.length; i++) {
+         CosineSimilarity[i][0] = i;
+         if (CosA * CosB[i] != 0) {
+            CosineSimilarity[i][1] = similarity[i][1] / (CosA * CosB[i]);
+         }
+         else {
+            CosineSimilarity[i][1] = 0;
+         }
+      }
+      
+      //Cosine similarity 내림차순 정렬
+      for(int i = 0; i < CosineSimilarity.length - 1; i++) {
+          for(int j = i+1; j < CosineSimilarity.length; j++) {
+             if(CosineSimilarity[i][1] < CosineSimilarity[j][1]) {
+                double temp = CosineSimilarity[i][1];
+                CosineSimilarity[i][1] = CosineSimilarity[j][1];
+                CosineSimilarity[j][1] = temp;
+                temp = CosineSimilarity[i][0];
+                CosineSimilarity[i][0] = CosineSimilarity[j][0];
+                CosineSimilarity[j][0] = temp;
+             }
+          }
+       }
+      //예전 유사도 정렬
       for(int i = 0; i < similarity.length - 1; i++) {
           for(int j = i+1; j < similarity.length; j++) {
              if(similarity[i][1] < similarity[j][1]) {
@@ -145,7 +198,7 @@ public class searcher {
              }
           }
        }
-	    
+       
       //하드코딩을 이용해 collection.xml파일에 있는 타이틀을 가져온다.
       String[] titleData = new String[similarity.length];
       
@@ -165,9 +218,16 @@ public class searcher {
       }
       
       //마지막 출력
+//      for(int i = 0; i < similarity.length && i < 3; i++)
+//          if(similarity[i][1] > 0)
+//             System.out.printf("%d등 : 문서(%d) , 타이틀 : (%s) , 유사도 : (%f)\n",i+1,(int)similarity[i][0],titleData[(int)similarity[i][0]], similarity[i][1]);
+//       
+      //상위 3위까지 출력 (유사도가 0인 경우 제외함)
       for(int i = 0; i < similarity.length && i < 3; i++)
-          if(similarity[i][1] > 0)
-             System.out.printf("%d등 : 문서(%d) , 타이틀 : (%s) , 유사도 : (%f)\n",i+1,(int)similarity[i][0],titleData[(int)similarity[i][0]], similarity[i][1]);
-       
+         if(CosineSimilarity[i][1] > 0)
+            System.out.printf("%d등 : 문서(%d) , 타이틀 : (%s) , 유사도 : (%f)\n",i+1,(int)CosineSimilarity[i][0],titleData[(int)CosineSimilarity[i][0]], CosineSimilarity[i][1]);
+      
+   
     }
+   }
 }
