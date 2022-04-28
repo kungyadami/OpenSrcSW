@@ -15,6 +15,8 @@ public class kuir {
 
 		String command = args[0];
 		String path = args[1];
+		String query_command = args[2];
+		String query = args[3];
 
 		if(command.equals("-c")) {
 			makeCollection collection = new makeCollection(path);
@@ -27,6 +29,11 @@ public class kuir {
 		  else if(command.equals("-i")) {
 		  indexer post = new indexer(path);
 		  post.indexXml();
+		  }
+		  else if(command.equals("-m")&&query_command.equals("-q")) {
+			MidTerm show = new MidTerm(path, query);
+			show.showSnippet();
+			  
 		  }
 	}
 
